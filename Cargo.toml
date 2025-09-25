@@ -1,6 +1,13 @@
 [package]
-name = "tmux-status-metrics"
-version = "0.1.0"
+name = "tmux-cpu-rs"
+version = "0.2.0"
 edition = "2024"
+description = "A Tmux status line plugin to show CPU usage"
+license = "MIT OR Apache-2.0"
+keywords = ["tmux", "statusline", "plugin", "cpu", "monitor"]
+categories = ["command-line-utilities", "accessibility"]
 
 [dependencies]
+clap = { version = "4.5.47", features = ["derive"] }
+color-print = "0.3.7"
+palette = "0.7.6"
