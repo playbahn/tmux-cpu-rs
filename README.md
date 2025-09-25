@@ -6,6 +6,18 @@ A small, fast Rust-based CLI tool to display CPU usage inside your `tmux` status
 
 ![Intro Picture 2](./assets/images/header-2.png)
 
+## Platform Support
+
+**Linux only** - This tool reads CPU statistics from `/proc/stat` and only works on Linux systems.
+
+**Tested and supported architectures:**
+- x86_64 (64-bit Intel/AMD)
+
+**Untested architectures:**
+- aarch64 (64-bit ARM) 
+- armv7 (32-bit ARM)
+- i686 (32-bit Intel/AMD)
+
 ---
 
 ## Features
@@ -165,6 +177,8 @@ set -g status-right "#(path/to/tmux-cpu-rs -u #{client_uid} -p #{client_pid} -P2
 #[fg=default,bg=default,reverse,bold] #H "
 ```
 
+![Nerd Font right dividers](./assets/images/nerd-font-right-dividers.png)
+
 ### Note
 
 Unicode escape sequences in the form given above are only rendered as glyphs if they're parsed by `tmux`. In other words, this works at the `tmux` command prompt or `.tmux.conf`:
@@ -178,8 +192,6 @@ But at the (`bash`) shell command prompt or a (`bash`) shell script, it will nee
 ```bash
 tmux display "A"$'\uE0B2'"B"
 ```
-
-![Nerd Font right dividers](./assets/images/nerd-font-right-dividers.png)
 
 ## ANOTHER CPU usage monitor?
 

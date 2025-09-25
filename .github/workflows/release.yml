@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    name: Build Linux binary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Build
+        run: cargo build --release
+      
+      - name: Upload binary to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: target/release/tmux-cpu-rs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
