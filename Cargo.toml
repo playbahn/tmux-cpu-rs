@@ -2,6 +2,7 @@
 name = "tmux-cpu-rs"
 version = "0.2.0"
 edition = "2024"
+repository = "https://github.com/playbahn/tmux-cpu-rs"
 description = "A Tmux status line plugin to show CPU usage"
 license = "MIT OR Apache-2.0"
 keywords = ["tmux", "statusline", "plugin", "cpu", "monitor"]
