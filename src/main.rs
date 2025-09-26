@@ -9,12 +9,13 @@ const AFTER_HELP: &str = color_print::cstr!(
 "<bold,underline>Formatting:</bold,underline>
 <bold>--before</> and <bold>--after</> take tmux-like format strings: <bold>#<<<u>style</>>><u>text</></> where
 <bold>i.</>  <u>text</> is any valid UTF8 text that is printed without any processing, and
-<bold>ii.</> <u>style</> takes tmux style strings (validity unchecked), with the additional feature that every match for
-    <bold>GRADIENT</> inside it is replaced by a color from Hue 120 to 0 degrees (going from low to high usage)
-    e.g. <bold>#<<fg=GRADIENT>>abc</> will be replaced by <bold>#[fg=#00ff00]abc</> for a 0%-ish CPU usage
+<bold>ii.</> <u>style</> takes tmux style strings (validity unchecked), with the additional feature that
+    every match for the exact pattern <bold>HEXGRAD</> inside it is replaced by a color from
+    Hue 120 degrees (green) to Hue 0 degrees (red) (going from low to high usage)
+    e.g. <bold>#<<fg=HEXGRAD>>abc</> will be replaced by <bold>#[fg=#00ff00]abc</> for a 0%-ish CPU usage
 Any empty <bold>#<<>></>'s at the start are trimmed.
 
-<bold>--raw</> prints CPU usage and the gradient in the format: <bold><u>USAGE</>\\n<u>GRADIENT</></> where <bold>\\n</> is U+000A (newline)
+<bold>--raw</> prints CPU usage and the gradient in the format: <bold><u>USAGE</>\\n<u>HEXGRAD</></> where <bold>\\n</> is U+000A (newline)
 
 Furthermore, <bold>--before</> and <bold>--after</> conflict with <bold>--raw</>"
 );
@@ -105,7 +106,7 @@ fn main() {
                             );
                         }
                     }
-                };
+                }
             }
 
             options
@@ -193,25 +194,21 @@ fn main() {
                             None => out + cur.as_str(),
                             Some(2) => out + &cur[3..],
                             Some(end) => {
-                                if cur[2..end].contains("GRADIENT") && gradient.is_empty() {
+                                // Why HEXGRAD and not GRADIENT, or COLOR etc? Cause `HEXGRAD` and
+                                // `#RRGGBB` are the same length, so every replace of `HEXGRAD`
+                                // with `#RRGGBB` doesn't change the position of every subseq
+                                // `HEXGRAD` and also the trailing `<` for the style string `#<>`.
+                                // So in gist, less calculations.
+                                if cur[2..end].contains("HEXGRAD") && gradient.is_empty() {
                                     gradient = calc_gradient();
                                 }
 
-                                let indices = cur[..end].match_indices("GRADIENT").map(|(i, _)| i);
-                                // for every replace, index of next GRADIENT decreases by number of
-                                // replaces already done
-                                let indices = indices.enumerate().map(|(i, gi)| gi - i);
-                                let mut cur = cur.clone();
+                                let mut cur =
+                                    cur[..end].replace("HEXGRAD", &gradient) + &cur[end..];
 
                                 cur.replace_range(1..2, "[");
                                 cur.replace_range(end..end + 1, "]");
 
-                                for start in indices {
-                                    cur.replace_range(
-                                        start..start + (const { "GRADIENT".len() }),
-                                        &gradient,
-                                    );
-                                }
                                 out + cur.as_str()
                             }
                         }

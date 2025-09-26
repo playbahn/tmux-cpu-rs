@@ -14,7 +14,7 @@ A small, fast Rust-based CLI tool to display CPU usage inside your `tmux` status
 - x86_64 (64-bit Intel/AMD)
 
 **Untested architectures:**
-- aarch64 (64-bit ARM) 
+- aarch64 (64-bit ARM)
 - armv7 (32-bit ARM)
 - i686 (32-bit Intel/AMD)
 
@@ -78,12 +78,12 @@ where:
 
 2. **style** uses `tmux` style syntax (validity is not checked), but with an additional feature:
 
-    Every occurrence of the word **GRADIENT** inside the style string will be replaced by a color value ranging from Hue 120° (green) to Hue 0° (red) depending on CPU usage.
+    Every occurrence of the word **HEXGRAD** inside the style string will be replaced by a color value ranging from Hue 120° (green) to Hue 0° (red) depending on CPU usage.
 
 ## Example
 
 ```tmux
-set -g status-right "#(path/to/tmux-cpu-rs --uid #{client_uid} --pid #{client_pid} -P1 -b '#<fg=GRADIENT>') "
+set -g status-right "#(path/to/tmux-cpu-rs --uid #{client_uid} --pid #{client_pid} -P1 -b '#<fg=HEXGRAD>') "
 ```
 
 With a low CPU usage, the above will render as:
@@ -95,14 +95,14 @@ With a low CPU usage, the above will render as:
 When using `--raw`, the output format becomes:
 
 ```console
-USAGE\nGRADIENT
+USAGE\nHEXGRAD
 ```
 
 where:
 
 - `USAGE` is the numeric CPU usage
 - `\n` is the Unicode U+000A newline character
-- `GRADIENT` is the computed color (hex string)
+- `HEXGRAD` is the computed color (hex string)
 
 This is useful if you want to build your own custom `tmux` formatting or use the values in other scripts.
 
@@ -121,7 +121,7 @@ With gradients turned on:
 
 ```tmux
 set -g status-right "#(path/to/tmux-cpu-rs --uid #{client_uid} --pid #{client_pid} \
---precision 1 --before '#<fg=GRADIENT>' --after '%') "
+--precision 1 --before '#<fg=HEXGRAD>' --after '%') "
 ```
 
 ![With gradient](./assets/images/gradient-on.png)
@@ -130,7 +130,7 @@ set -g status-right "#(path/to/tmux-cpu-rs --uid #{client_uid} --pid #{client_pi
 
 ```tmux
 set -g status-right "#(path/to/tmux-cpu-rs --uid #{client_uid} --pid #{client_pid} \
---before '#<fg=GRADIENT>' -a%) #[reverse] #H #[noreverse]"
+--before '#<fg=HEXGRAD>' -a%) #[reverse] #H #[noreverse]"
 ```
 
 ![Persistent Styles](./assets/images/persistent-style-no-ple.png)
@@ -139,14 +139,14 @@ This will have to be resolved with either:
 
 ```tmux
 set -g status-right "#(path/to/tmux-cpu-rs --uid #{client_uid} --pid #{client_pid} \
---before '#<fg=GRADIENT>' -a% -a '#<fg=default>') #[reverse] #H #[noreverse]"
+--before '#<fg=HEXGRAD>' -a% -a '#<fg=default>') #[reverse] #H #[noreverse]"
 ```
 
 or
 
 ```tmux
 set -g status-right "#(path/to/tmux-cpu-rs --uid #{client_uid} --pid #{client_pid} \
---before '#<fg=GRADIENT>' -a%) #[fg=default,reverse] #H #[noreverse]"
+--before '#<fg=HEXGRAD>' -a%) #[fg=default,reverse] #H #[noreverse]"
 ```
 
 ![Resetting foreground](./assets/images/reset-fg-gradient.png)
@@ -163,7 +163,7 @@ Last but not least, with Nerd Font (Powerline) half circles:
 
 ```tmux
 set -g status-right "#(path/to/tmux-cpu-rs -u #{client_uid} -p #{client_pid} -P1 \
--b '#<fg=GRADIENT>\uE0B6' -b '#<reverse,bold>\uF4BC ' -a '#<noreverse>\uE0B4') \
+-b '#<fg=HEXGRAD>\uE0B6' -b '#<reverse,bold>\uF4BC ' -a '#<noreverse>\uE0B4') \
 #[fg=default]\uE0B6#[reverse,bold]#H#[noreverse]\uE0B4"
 ```
 
@@ -173,7 +173,7 @@ With Nerd Font (Powerline) right dividers:
 
 ```tmux
 set -g status-right "#(path/to/tmux-cpu-rs -u #{client_uid} -p #{client_pid} -P2 \
--b '#<fg=GRADIENT>\uE0B2' -b '#<reverse,bold> \uF4BC ' -a ' ' -a '#<noreverse,bg=#14b5ff>\uE0D6')\
+-b '#<fg=HEXGRAD>\uE0B2' -b '#<reverse,bold> \uF4BC ' -a ' ' -a '#<noreverse,bg=#14b5ff>\uE0D6')\
 #[fg=default,bg=default,reverse,bold] #H "
 ```
 
@@ -192,6 +192,20 @@ But at the (`bash`) shell command prompt or a (`bash`) shell script, it will nee
 ```bash
 tmux display "A"$'\uE0B2'"B"
 ```
+
+## How it works and stuff
+
+Firstly, `tmux-cpu-rs` runs *only* when it's invoked with `#()`. It is as "frequent" as the `status-interval` your client is using. Users with lower `status-interval`s (say 1 second) will see more sensible stats than user with a higher `status-interval` (say 5 second).
+
+The first time it is invoked it finds no past or "old" stats, so it only caches the current stats in a temp file with the name `A-B` (for client_uid `A` and client_pid `B`) in the cachedir (`/tmp/tmcpu/` by default), sets (*appends*, with `-a`) two hooks (can be disabled with `--no-hook`) at `client-detached` and `session-closed` (see `tmux(1)`) with the code:
+
+```tmux
+run-shell 'rm /tmp/tmcpu/A-B 2> /dev/null'
+```
+
+For every subsequent run it updates the cache, and prints new usage stats to stdout.
+
+Additionally, you could also redirect the stderr of `tmux-cpu-rs` inside the same `#()` with `2> /tmp/tmcpu.log` if something's not working.
 
 ## ANOTHER CPU usage monitor?
 
