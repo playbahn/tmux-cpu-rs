@@ -1,25 +1,34 @@
 name: Release
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+    - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  build:
-    name: Build Linux binary
+  build-and-release:
+    name: Build and Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      
+
       - name: Build
         run: cargo build --release
-      
-      - name: Upload binary to release
+
+      - name: Prepare Upload Artifact
+        run: |
+          mkdir artifacts
+          cp target/release/tmux-cpu-rs artifacts/tmux-cpu-rs-x86_64-linux
+
+      - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/release/tmux-cpu-rs
+          files: artifacts/tmux-cpu-rs-x86_64-linux
+          generate_release_notes: true
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
