@@ -23,12 +23,7 @@ Furthermore, <bold>--before</> and <bold>--after</> conflict with <bold>--raw</>
 #[derive(Parser, Debug)]
 #[command(version, long_about = None, after_help = AFTER_HELP)]
 struct Config {
-    /// Pass in #{client_uid}
-    #[arg(short, long)]
-    uid: String,
-
     /// Pass in #{client_pid}
-    #[arg(short, long)]
     pid: String,
 
     /// Disable setting of cache removal hooks (client-detached, session-closed)
@@ -43,7 +38,7 @@ struct Config {
     #[arg(short, long)]
     before: Vec<String>,
 
-    /// Tmux format strings (sort of) to place before CPU usage (see below)
+    /// Tmux format strings (sort of) to place after CPU usage (see below)
     #[arg(short, long)]
     after: Vec<String>,
 
@@ -73,13 +68,7 @@ fn main() {
         panic!("Could not create {}: {e:#?}", &config.cachedir.display())
     }
 
-    let cache = config
-        .cachedir
-        .join(format!("{}-{}", config.uid, config.pid));
-
-    #[cfg(debug_assertions)]
-    dbg!(&cache);
-
+    let cache = config.cachedir.join(config.pid);
     let mut options = std::fs::File::options();
 
     let mut file = match options.read(true).write(true).truncate(false).open(&cache) {
