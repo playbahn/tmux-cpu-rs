@@ -213,7 +213,7 @@ tmux display "A"$'\uE0B2'"B"
 
 ## How it works and stuff
 
-Firstly, `tmux-cpu-rs` runs *only* when it's invoked with `#()`. It is as "frequent" as the `status-interval` your client is using. Users with lower `status-interval`s (say 1 second) will see more sensible stats than user with a higher `status-interval` (say 5 second).
+Firstly, `tmux-cpu-rs` runs *only* when it's invoked with `#()`. It is as "frequent" as the `status-interval` your client is using. Users with lower `status-interval`s (say 1 second) will see more sensible stats than users with a higher `status-interval` (say 5 second).
 
 The first time it is invoked it finds no past or "old" stats, so it only caches the current stats in a temp file with the name `XYZ` for a passed client_pid of `XYZ`) in the cachedir[^1], and sets two hooks[^2] at `client-detached` and `session-closed` (see [`tmux(1)`](https://man.openbsd.org/OpenBSD-current/man1/tmux.1)) for the removal of that cache file.
 

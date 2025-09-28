@@ -68,7 +68,7 @@ fn main() {
         panic!("Could not create {}: {e:#?}", &config.cachedir.display())
     }
 
-    let cache = config.cachedir.join(config.pid);
+    let cache = config.cachedir.join(&config.pid);
     let mut options = std::fs::File::options();
 
     let mut file = match options.read(true).write(true).truncate(false).open(&cache) {
@@ -78,7 +78,13 @@ fn main() {
         }
         Err(_) => {
             if config.hook {
-                let command = format!("run-shell 'rm {} 2> /dev/null'", cache.display());
+                let client_not_exists = format!(
+                    "[ -z $(tmux lsc -F '1' -f '#{{==:#{{client_pid}},{}}}') ]",
+                    config.pid
+                );
+                let rm_cache = format!("rm {} 2> /dev/null", cache.display());
+                let command = format!("run-shell \"if {client_not_exists}; then {rm_cache}; fi\"");
+
                 let output = std::process::Command::new("tmux")
                     .args(["set-hook", "-ga", "client-detached", &command, ";"])
                     .args(["set-hook", "-ga", "session-closed", &command])

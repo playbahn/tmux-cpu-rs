@@ -1,6 +1,6 @@
 [package]
 name = "tmux-cpu-rs"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2024"
 repository = "https://github.com/playbahn/tmux-cpu-rs"
 description = "A Tmux status line plugin to show CPU usage"
